@@ -1,0 +1,2 @@
+The idea and the concept of the product is... It is unified all in one inbox means all the inboxes of gmail, outlook etc are in one app. Also, it have the RAG system specifically on the sent section to understand the user tone, taste, style to help the user to draft a message more quicky.
+We'll try to connect 5 atleast channels through their developer applications in the MVP stage.
