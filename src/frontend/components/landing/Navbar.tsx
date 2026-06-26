@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X } from "lucide-react";
 
 const links = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Channels", href: "#channels" },
+  { label: "Features", href: "/#features" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Channels", href: "/#channels" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export default function Navbar() {
@@ -23,7 +24,7 @@ export default function Navbar() {
         className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#05050a]/70 backdrop-blur-xl"
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <Link href="#" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-500/30">
               <Sparkles className="h-4 w-4 text-white" />
             </span>
@@ -55,10 +56,10 @@ export default function Navbar() {
             <motion.a
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              href="#cta"
+              href="/signup"
               className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black"
             >
-              Get early access
+              Claim your inbox
             </motion.a>
           </div>
         </nav>
@@ -96,15 +97,15 @@ export default function Navbar() {
                 Sign in is coming soon
               </h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Mailsoul is in private beta. Join the waitlist and we will
-                email you the moment your account is ready.
+                Mailsoul is in private beta. Create your account now and we
+                will have you signed in shortly.
               </p>
               <a
-                href="#cta"
+                href="/signup"
                 onClick={() => setSignInOpen(false)}
                 className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition-transform hover:scale-105"
               >
-                Join the waitlist
+                Create your account
               </a>
             </motion.div>
           </motion.div>

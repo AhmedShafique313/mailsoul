@@ -47,8 +47,8 @@ export default function ChannelLogos() {
         </motion.div>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          MVP ships with 5+ providers connected via their official developer
-          APIs, with more added every release.
+          Mailsoul connects 5+ providers via their official developer APIs,
+          with more added every release.
         </p>
       </div>
     </section>

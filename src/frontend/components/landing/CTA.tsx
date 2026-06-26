@@ -2,20 +2,21 @@
 
 import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Send, CheckCircle2, Mail } from "lucide-react";
 
 export default function CTA() {
   const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !message.trim()) return;
     setSubmitted(true);
   }
 
   return (
-    <section id="cta" className="px-6 py-24 lg:px-8">
+    <section id="contact" className="px-6 py-24 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -27,12 +28,15 @@ export default function CTA() {
           aria-hidden
           className="animate-blob absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_0%,rgba(124,58,237,0.25),transparent_70%)]"
         />
-        <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Bring every inbox into one voice.
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-violet-300">
+          <Mail className="h-5 w-5" />
+        </span>
+        <h2 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Have a question about Mailsoul?
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-400">
-          Join the private beta and connect Gmail, Outlook, and the rest of
-          your accounts in minutes.
+          Tell us what is on your mind. Our team reads every message and gets
+          back to you personally.
         </p>
 
         <AnimatePresence mode="wait">
@@ -45,7 +49,7 @@ export default function CTA() {
               className="mx-auto mt-8 flex max-w-md items-center justify-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-5 py-3 text-sm font-medium text-emerald-300"
             >
               <CheckCircle2 className="h-4 w-4" />
-              You&apos;re on the list. We&apos;ll email {email} when it&apos;s your turn.
+              Thanks! We will reply to {email} soon.
             </motion.div>
           ) : (
             <motion.form
@@ -54,7 +58,7 @@ export default function CTA() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onSubmit={handleSubmit}
-              className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row"
+              className="mx-auto mt-8 flex max-w-md flex-col gap-3"
             >
               <input
                 type="email"
@@ -62,7 +66,15 @@ export default function CTA() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-violet-400/50 focus:outline-none"
+                className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-violet-400/50 focus:outline-none"
+              />
+              <textarea
+                required
+                rows={3}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="What would you like to know?"
+                className="resize-none rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-violet-400/50 focus:outline-none"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -70,15 +82,15 @@ export default function CTA() {
                 type="submit"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-violet-500/30"
               >
-                Join waitlist
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Send message
+                <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </motion.button>
             </motion.form>
           )}
         </AnimatePresence>
 
         <p className="mt-4 text-xs text-zinc-500">
-          No spam. Just an invite when your spot opens up.
+          No spam. Just a real reply from our team.
         </p>
       </motion.div>
     </section>

@@ -1,9 +1,108 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Inbox, Sparkles, Send } from "lucide-react";
 
+type MailPreview = {
+  from: string;
+  subject: string;
+  preview: string;
+  source: string;
+};
+
+const inboxes: { key: string; name: string; count: number }[] = [
+  { key: "all", name: "All Inboxes", count: 128 },
+  { key: "gmail", name: "Gmail · Personal", count: 42 },
+  { key: "outlook", name: "Outlook · Work", count: 31 },
+  { key: "yahoo", name: "Yahoo Mail", count: 12 },
+  { key: "icloud", name: "iCloud Mail", count: 9 },
+  { key: "proton", name: "Proton Mail", count: 34 },
+];
+
+const mailsByInbox: Record<string, MailPreview[]> = {
+  gmail: [
+    {
+      from: "Jordan",
+      subject: "Dinner this weekend?",
+      preview: "Thinking that new ramen place near the office...",
+      source: "Gmail",
+    },
+    {
+      from: "Sara · Figma",
+      subject: "Your design file was shared",
+      preview: "Sara invited you to collaborate on the Q3 brand kit.",
+      source: "Gmail",
+    },
+  ],
+  outlook: [
+    {
+      from: "Priya · Acme Corp",
+      subject: "Re: Q3 partnership proposal",
+      preview: "Loved the deck, can we lock a call for Thursday?",
+      source: "Outlook",
+    },
+    {
+      from: "IT Helpdesk",
+      subject: "Password expiring in 3 days",
+      preview: "Reset your password to keep access to Outlook.",
+      source: "Outlook",
+    },
+  ],
+  yahoo: [
+    {
+      from: "Yahoo Finance",
+      subject: "Markets close higher today",
+      preview: "Tech stocks rally as inflation data cools.",
+      source: "Yahoo",
+    },
+    {
+      from: "Mark",
+      subject: "Old college friends reunion",
+      preview: "We are planning a get together next month...",
+      source: "Yahoo",
+    },
+  ],
+  icloud: [
+    {
+      from: "Apple",
+      subject: "Your iCloud storage is almost full",
+      preview: "Upgrade your plan to keep backing up your devices.",
+      source: "iCloud",
+    },
+    {
+      from: "Aunt Carol",
+      subject: "Photos from the trip",
+      preview: "Sharing the album from our weekend getaway.",
+      source: "iCloud",
+    },
+  ],
+  proton: [
+    {
+      from: "Stripe",
+      subject: "Your invoice is ready",
+      preview: "Your March invoice has been generated.",
+      source: "Proton",
+    },
+    {
+      from: "ProtonVPN",
+      subject: "Your subscription renews soon",
+      preview: "Renew now to keep your connection secure.",
+      source: "Proton",
+    },
+  ],
+};
+
+mailsByInbox.all = [
+  mailsByInbox.outlook[0],
+  mailsByInbox.gmail[0],
+  mailsByInbox.proton[0],
+];
+
 export default function Hero() {
+  const [activeInbox, setActiveInbox] = useState("all");
+  const mails = mailsByInbox[activeInbox] ?? [];
+
   return (
     <section className="relative overflow-hidden px-6 pt-20 pb-28 lg:px-8 lg:pt-28">
       {/* Gradient mesh background */}
@@ -47,10 +146,10 @@ export default function Hero() {
           <motion.a
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            href="#cta"
+            href="/signup"
             className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-black shadow-lg shadow-violet-500/30"
           >
-            Get early access
+            Claim your inbox
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </motion.a>
           <motion.a
@@ -84,77 +183,61 @@ export default function Hero() {
 
           <div className="grid grid-cols-1 divide-white/5 md:grid-cols-[260px_1fr] md:divide-x">
             <div className="hidden flex-col gap-1 p-4 md:flex">
-              {[
-                { name: "All Inboxes", count: 128, active: true },
-                { name: "Gmail · Personal", count: 42 },
-                { name: "Outlook · Work", count: 31 },
-                { name: "Yahoo Mail", count: 12 },
-                { name: "iCloud Mail", count: 9 },
-                { name: "Proton Mail", count: 34 },
-              ].map((item) => (
-                <div
-                  key={item.name}
-                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
-                    item.active
+              {inboxes.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setActiveInbox(item.key)}
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                    activeInbox === item.key
                       ? "bg-white/10 text-white"
                       : "text-zinc-400 hover:bg-white/5"
                   }`}
                 >
                   <span>{item.name}</span>
                   <span className="text-xs text-zinc-500">{item.count}</span>
-                </div>
+                </button>
               ))}
             </div>
 
             <div className="flex flex-col gap-3 p-5 text-left">
-              {[
-                {
-                  from: "Priya · Acme Corp",
-                  subject: "Re: Q3 partnership proposal",
-                  preview: "Loved the deck, can we lock a call for Thursday?",
-                  source: "Outlook",
-                },
-                {
-                  from: "Jordan",
-                  subject: "Dinner this weekend?",
-                  preview: "Thinking that new ramen place near the office...",
-                  source: "Gmail",
-                },
-                {
-                  from: "Stripe",
-                  subject: "Your invoice is ready",
-                  preview: "Your March invoice has been generated.",
-                  source: "Proton",
-                },
-              ].map((mail, i) => (
+              <AnimatePresence mode="wait">
                 <motion.div
-                  key={mail.subject}
+                  key={activeInbox}
                   initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + i * 0.12 }}
-                  className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3"
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex flex-col gap-3"
                 >
-                  <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 text-xs font-semibold text-white">
-                    {mail.from.charAt(0)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-white">
-                        {mail.from}
-                      </p>
-                      <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-zinc-400">
-                        {mail.source}
+                  {mails.map((mail) => (
+                    <div
+                      key={mail.subject}
+                      className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3"
+                    >
+                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 text-xs font-semibold text-white">
+                        {mail.from.charAt(0)}
                       </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate text-sm font-medium text-white">
+                            {mail.from}
+                          </p>
+                          <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-zinc-400">
+                            {mail.source}
+                          </span>
+                        </div>
+                        <p className="truncate text-sm text-zinc-300">
+                          {mail.subject}
+                        </p>
+                        <p className="truncate text-xs text-zinc-500">
+                          {mail.preview}
+                        </p>
+                      </div>
                     </div>
-                    <p className="truncate text-sm text-zinc-300">
-                      {mail.subject}
-                    </p>
-                    <p className="truncate text-xs text-zinc-500">
-                      {mail.preview}
-                    </p>
-                  </div>
+                  ))}
                 </motion.div>
-              ))}
+              </AnimatePresence>
 
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
