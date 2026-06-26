@@ -4,12 +4,11 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle2, Lock, Mail, Sparkles, User } from "lucide-react";
-import { signUp } from "@/frontend/lib/auth-client";
+import { ArrowRight, CheckCircle2, Lock, Mail, Sparkles } from "lucide-react";
+import { signIn } from "@/frontend/lib/auth-client";
 
-export default function SignUpPage() {
+export default function SignInPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -18,21 +17,20 @@ export default function SignUpPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim()) return;
 
     setSubmitting(true);
     setError("");
 
-    const { error: signUpError } = await signUp.email({
-      name,
+    const { error: signInError } = await signIn.email({
       email,
       password,
     });
 
     setSubmitting(false);
 
-    if (signUpError) {
-      setError(signUpError.message ?? "Something went wrong. Please try again.");
+    if (signInError) {
+      setError(signInError.message ?? "Incorrect email or password.");
       return;
     }
 
@@ -78,11 +76,11 @@ export default function SignUpPage() {
             </div>
 
             <h1 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Claim your inbox.
+              Welcome back.
             </h1>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
-              Create your Mailsoul account and bring every inbox into one
-              voice.
+              Sign in to your unified inbox and pick up right where you left
+              off.
             </p>
 
             <AnimatePresence mode="wait">
@@ -96,8 +94,7 @@ export default function SignUpPage() {
                 >
                   <CheckCircle2 className="h-6 w-6 text-emerald-300" />
                   <p className="text-sm font-medium text-emerald-200">
-                    You&apos;re in, {name.split(" ")[0] || "there"}. Taking
-                    you back to Mailsoul now.
+                    You&apos;re signed in. Taking you back to Mailsoul now.
                   </p>
                 </motion.div>
               ) : (
@@ -109,23 +106,6 @@ export default function SignUpPage() {
                   onSubmit={handleSubmit}
                   className="mt-5 flex flex-col gap-3"
                 >
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-zinc-400">
-                      Full name
-                    </span>
-                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 focus-within:border-violet-400/50">
-                      <User className="h-4 w-4 shrink-0 text-zinc-500" />
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Priya Sharma"
-                        className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
-                      />
-                    </div>
-                  </label>
-
                   <label className="flex flex-col gap-1">
                     <span className="text-xs font-medium text-zinc-400">
                       Email
@@ -144,18 +124,25 @@ export default function SignUpPage() {
                   </label>
 
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-zinc-400">
-                      Password
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-zinc-400">
+                        Password
+                      </span>
+                      <Link
+                        href="/#contact"
+                        className="text-xs font-medium text-violet-300 hover:text-violet-200"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 focus-within:border-violet-400/50">
                       <Lock className="h-4 w-4 shrink-0 text-zinc-500" />
                       <input
                         type="password"
                         required
-                        minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="At least 8 characters"
+                        placeholder="Enter your password"
                         className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none"
                       />
                     </div>
@@ -174,7 +161,7 @@ export default function SignUpPage() {
                     disabled={submitting}
                     className="group mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-6 py-2.5 text-sm font-semibold text-black shadow-lg shadow-violet-500/30 disabled:opacity-60"
                   >
-                    {submitting ? "Creating your account..." : "Create my account"}
+                    {submitting ? "Signing in..." : "Sign in"}
                     {!submitting && (
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     )}
@@ -211,25 +198,25 @@ export default function SignUpPage() {
             </AnimatePresence>
 
             <p className="mt-4 text-center text-xs text-zinc-500">
-              By creating an account you agree to our{" "}
+              Protected by the same{" "}
               <Link href="/terms" className="text-zinc-300 hover:text-white">
                 terms
               </Link>{" "}
               and{" "}
               <Link href="/privacy" className="text-zinc-300 hover:text-white">
                 privacy policy
-              </Link>
-              .
+              </Link>{" "}
+              as every Mailsoul account.
             </p>
           </div>
 
           <p className="mt-4 text-center text-sm text-zinc-400">
-            Have questions first?{" "}
+            New to Mailsoul?{" "}
             <Link
-              href="/#contact"
+              href="/signup"
               className="font-medium text-violet-300 hover:text-violet-200"
             >
-              Talk to us
+              Create an account
             </Link>
           </p>
         </motion.div>
