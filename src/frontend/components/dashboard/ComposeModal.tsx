@@ -7,20 +7,38 @@ import { CheckCircle2, Send, Sparkles, X } from "lucide-react";
 type Props = {
   open: boolean;
   onClose: () => void;
+  onSend: (payload: { to: string; subject: string; body: string }) => Promise<void>;
 };
 
-export default function ComposeModal({ open, onClose }: Props) {
+export default function ComposeModal({ open, onClose, onSend }: Props) {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
 
   function handleClose() {
     onClose();
     setSent(false);
+    setError("");
     setTo("");
     setSubject("");
     setMessage("");
+  }
+
+  async function handleSend() {
+    if (!to.trim()) return;
+    setSending(true);
+    setError("");
+    try {
+      await onSend({ to: to.trim(), subject: subject.trim() || "(no subject)", body: message });
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -93,17 +111,21 @@ export default function ComposeModal({ open, onClose }: Props) {
                   </button>
 
                   <motion.button
-                    whileHover={{ scale: to ? 1.03 : 1 }}
-                    whileTap={{ scale: to ? 0.97 : 1 }}
+                    whileHover={{ scale: to && !sending ? 1.03 : 1 }}
+                    whileTap={{ scale: to && !sending ? 0.97 : 1 }}
                     type="button"
-                    disabled={!to.trim()}
-                    onClick={() => setSent(true)}
+                    disabled={!to.trim() || sending}
+                    onClick={handleSend}
                     className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-violet-500/30 disabled:opacity-50"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    Send
+                    {sending ? "Sending..." : "Send"}
                   </motion.button>
                 </div>
+
+                {error && (
+                  <p className="text-xs text-red-300">{error}</p>
+                )}
               </div>
             )}
           </motion.div>

@@ -47,6 +47,7 @@ const folderIcons: Record<FolderKey, typeof InboxIcon> = {
 
 type Props = {
   mails: Mail[];
+  liveFolderCounts?: Partial<Record<FolderKey, number>>;
   userName: string;
   userEmail: string;
   activeInbox: InboxKey | "all";
@@ -66,6 +67,7 @@ type Props = {
 
 export default function Sidebar({
   mails,
+  liveFolderCounts,
   userName,
   userEmail,
   activeInbox,
@@ -177,7 +179,7 @@ export default function Sidebar({
           <div className="flex flex-col gap-0.5">
             {folderMeta.map((folder) => {
               const Icon = folderIcons[folder.key];
-              const count = getFolderCount(mails, folder.key);
+              const count = liveFolderCounts?.[folder.key] ?? getFolderCount(mails, folder.key);
               return (
                 <button
                   key={folder.key}
@@ -250,7 +252,9 @@ export default function Sidebar({
                 </span>
                 {!collapsed && (
                   <span className="text-xs text-zinc-500">
-                    {getInboxCount(mails, inbox.key)}
+                    {inbox.key === "gmail"
+                      ? liveFolderCounts?.inbox ?? getInboxCount(mails, inbox.key)
+                      : getInboxCount(mails, inbox.key)}
                   </span>
                 )}
               </button>

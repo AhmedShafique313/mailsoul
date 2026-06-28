@@ -39,14 +39,14 @@ export default function MailList({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       {mails.map((mail, i) => (
         <motion.div
           key={mail.id}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3) }}
-          className={`group flex items-start gap-3 rounded-2xl border p-4 transition-colors ${
+          className={`group flex items-start gap-2.5 rounded-xl border p-3 transition-colors ${
             selectedId === mail.id
               ? "border-violet-400/30 bg-violet-500/10"
               : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05]"
@@ -55,10 +55,10 @@ export default function MailList({
           <button
             type="button"
             onClick={() => onSelect(mail.id)}
-            className="flex min-w-0 flex-1 items-start gap-3 text-left"
+            className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
           >
             <span
-              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${colorsFor(
+              className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${colorsFor(
                 mail.inbox
               )} text-xs font-semibold text-black`}
             >

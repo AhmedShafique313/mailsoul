@@ -7,6 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle2, Lock, Mail, Sparkles } from "lucide-react";
 import { signIn } from "@/frontend/lib/auth-client";
 
+async function handleGoogleSignIn() {
+  await signIn.social({ provider: "google", callbackURL: "/dashboard" });
+}
+
 export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -176,9 +180,8 @@ export default function SignInPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      disabled
-                      title="Coming soon"
-                      className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-400 opacity-50"
+                      onClick={handleGoogleSignIn}
+                      className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/10"
                     >
                       <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-red-400 to-amber-300" />
                       Google

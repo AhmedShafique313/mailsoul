@@ -22,6 +22,7 @@ export type Mail = {
   subject: string;
   preview: string;
   body: string[];
+  bodyHtml?: string;
   time: string;
   unread: boolean;
   starred: boolean;
@@ -29,6 +30,8 @@ export type Mail = {
   labels: string[];
   aiDraft: string;
   toneMatch: number;
+  threadId?: string;
+  messageId?: string;
 };
 
 export const inboxMeta: {
