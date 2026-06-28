@@ -33,6 +33,23 @@ export async function getGoogleAccessToken(headers: Headers) {
   }
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 async function gmailFetch(accessToken: string, path: string, init?: RequestInit) {
   const res = await fetch(`${GMAIL_API}${path}`, {
     ...init,
@@ -102,8 +119,8 @@ export async function listMessages(accessToken: string, opts: ListOptions) {
   const list = await gmailFetch(accessToken, `/messages?${params.toString()}`);
   const ids: string[] = (list?.messages ?? []).map((m: { id: string }) => m.id);
 
-  const messages = await Promise.all(
-    ids.map((id) => gmailFetch(accessToken, `/messages/${id}?format=full`))
+  const messages = await mapWithConcurrency(ids, 4, (id) =>
+    gmailFetch(accessToken, `/messages/${id}?format=full`)
   );
 
   return messages.filter(Boolean).map((raw) => parseMessage(raw, opts.folder));
@@ -254,16 +271,14 @@ export async function trashMessage(accessToken: string, id: string) {
 }
 
 export async function getLabelCounts(accessToken: string, labelIds: string[]) {
-  const results = await Promise.all(
-    labelIds.map(async (id) => {
-      try {
-        const label = await gmailFetch(accessToken, `/labels/${id}`);
-        return [id, { total: label?.messagesTotal ?? 0, unread: label?.messagesUnread ?? 0 }] as const;
-      } catch {
-        return [id, { total: 0, unread: 0 }] as const;
-      }
-    })
-  );
+  const results = await mapWithConcurrency(labelIds, 3, async (id) => {
+    try {
+      const label = await gmailFetch(accessToken, `/labels/${id}`);
+      return [id, { total: label?.messagesTotal ?? 0, unread: label?.messagesUnread ?? 0 }] as const;
+    } catch {
+      return [id, { total: 0, unread: 0 }] as const;
+    }
+  });
   return Object.fromEntries(results);
 }
 

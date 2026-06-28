@@ -76,7 +76,7 @@ export default function DashboardView({ userName, userEmail }: Props) {
     };
   }, [activeFolder, activeCategory, search]);
 
-  useEffect(() => {
+  function refreshFolderCounts() {
     fetchLabelCounts()
       .then((counts) => {
         const mapped: Partial<Record<FolderKey, number>> = {};
@@ -86,7 +86,11 @@ export default function DashboardView({ userName, userEmail }: Props) {
         setFolderCounts(mapped);
       })
       .catch(() => {});
-  }, [mails]);
+  }
+
+  useEffect(() => {
+    refreshFolderCounts();
+  }, [activeFolder]);
 
   function updateMail(id: string, updater: (mail: Mail) => Mail) {
     setMails((prev) => prev.map((m) => (m.id === id ? updater(m) : m)));
@@ -125,6 +129,7 @@ export default function DashboardView({ userName, userEmail }: Props) {
     setMails((prev) => prev.filter((m) => m.id !== id));
     try {
       await updateMailAction(id, "trash");
+      refreshFolderCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to move to trash.");
     }
@@ -134,6 +139,7 @@ export default function DashboardView({ userName, userEmail }: Props) {
     setMails((prev) => prev.filter((m) => m.id !== id));
     try {
       await updateMailAction(id, "spam");
+      refreshFolderCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to report spam.");
     }
