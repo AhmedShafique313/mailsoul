@@ -14,6 +14,7 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       requireLocalEmailVerified: false,
+      trustedProviders: ["google", "yahoo"],
     },
   },
   socialProviders: {
