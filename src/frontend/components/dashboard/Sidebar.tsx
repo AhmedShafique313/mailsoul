@@ -52,6 +52,7 @@ type Props = {
   userEmail: string;
   activeInbox: InboxKey | "all";
   onSelectInbox: (key: InboxKey | "all") => void;
+  yahooConnected?: boolean;
   activeFolder: FolderKey;
   onSelectFolder: (folder: FolderKey) => void;
   labels: string[];
@@ -72,6 +73,7 @@ export default function Sidebar({
   userEmail,
   activeInbox,
   onSelectInbox,
+  yahooConnected,
   activeFolder,
   onSelectFolder,
   labels,
@@ -250,12 +252,16 @@ export default function Sidebar({
                   />
                   {!collapsed && inbox.name}
                 </span>
-                {!collapsed && (
-                  <span className="text-xs text-zinc-500">
-                    {inbox.key === "gmail"
-                      ? liveFolderCounts?.inbox ?? getInboxCount(mails, inbox.key)
-                      : getInboxCount(mails, inbox.key)}
-                  </span>
+                {!collapsed && inbox.key === "yahoo" && !yahooConnected ? (
+                  <span className="text-xs font-medium text-violet-300">Connect</span>
+                ) : (
+                  !collapsed && (
+                    <span className="text-xs text-zinc-500">
+                      {inbox.key === "gmail"
+                        ? liveFolderCounts?.inbox ?? getInboxCount(mails, inbox.key)
+                        : getInboxCount(mails, inbox.key)}
+                    </span>
+                  )
                 )}
               </button>
             ))}

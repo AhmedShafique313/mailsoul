@@ -9,12 +9,20 @@ import CategoryTabs from "@/frontend/components/dashboard/CategoryTabs";
 import MailList from "@/frontend/components/dashboard/MailList";
 import MailDetail from "@/frontend/components/dashboard/MailDetail";
 import ComposeModal from "@/frontend/components/dashboard/ComposeModal";
+import ConnectYahooModal from "@/frontend/components/dashboard/ConnectYahooModal";
 import {
   fetchLabelCounts,
   fetchMails,
   sendMail,
   updateMailAction,
 } from "@/frontend/lib/gmail-client";
+import {
+  fetchYahooLabelCounts,
+  fetchYahooMails,
+  fetchYahooStatus,
+  sendYahooMail,
+  updateYahooMailAction,
+} from "@/frontend/lib/yahoo-client";
 import {
   type CategoryKey,
   type FolderKey,
@@ -51,6 +59,14 @@ export default function DashboardView({ userName, userEmail }: Props) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [folderCounts, setFolderCounts] = useState<Partial<Record<FolderKey, number>>>({});
+  const [yahooConnected, setYahooConnected] = useState(false);
+  const [connectYahooOpen, setConnectYahooOpen] = useState(false);
+
+  useEffect(() => {
+    fetchYahooStatus()
+      .then(setYahooConnected)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +74,14 @@ export default function DashboardView({ userName, userEmail }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const result = await fetchMails(activeFolder, activeCategory, search.trim() || undefined);
+        const trimmedSearch = search.trim() || undefined;
+        const [gmailResult, yahooResult] = await Promise.all([
+          fetchMails(activeFolder, activeCategory, trimmedSearch),
+          yahooConnected
+            ? fetchYahooMails(activeFolder, trimmedSearch).catch(() => [])
+            : Promise.resolve([]),
+        ]);
+        const result = [...gmailResult, ...yahooResult];
         if (!cancelled) {
           setMails(result);
           setSelectedId(result[0]?.id ?? null);
@@ -74,26 +97,34 @@ export default function DashboardView({ userName, userEmail }: Props) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [activeFolder, activeCategory, search]);
+  }, [activeFolder, activeCategory, search, yahooConnected]);
 
   function refreshFolderCounts() {
-    fetchLabelCounts()
-      .then((counts) => {
-        const mapped: Partial<Record<FolderKey, number>> = {};
-        for (const [folder, labelId] of Object.entries(labelCountKey)) {
-          mapped[folder as FolderKey] = counts[labelId as string]?.total ?? 0;
-        }
-        setFolderCounts(mapped);
-      })
-      .catch(() => {});
+    Promise.all([
+      fetchLabelCounts(),
+      yahooConnected ? fetchYahooLabelCounts().catch(() => ({})) : Promise.resolve({}),
+    ]).then(([gmailCounts, yahooCounts]) => {
+      const mapped: Partial<Record<FolderKey, number>> = {};
+      for (const [folder, labelId] of Object.entries(labelCountKey)) {
+        const gmailTotal = gmailCounts[labelId as string]?.total ?? 0;
+        const yahooTotal =
+          (yahooCounts as Record<string, { total: number }>)[folder]?.total ?? 0;
+        mapped[folder as FolderKey] = gmailTotal + yahooTotal;
+      }
+      setFolderCounts(mapped);
+    });
   }
 
   useEffect(() => {
     refreshFolderCounts();
-  }, [activeFolder]);
+  }, [activeFolder, yahooConnected]);
 
   function updateMail(id: string, updater: (mail: Mail) => Mail) {
     setMails((prev) => prev.map((m) => (m.id === id ? updater(m) : m)));
+  }
+
+  function actionFor(mail: Mail) {
+    return mail.inbox === "yahoo" ? updateYahooMailAction : updateMailAction;
   }
 
   async function handleSelect(id: string) {
@@ -102,7 +133,7 @@ export default function DashboardView({ userName, userEmail }: Props) {
     if (mail?.unread) {
       updateMail(id, (m) => ({ ...m, unread: false }));
       try {
-        await updateMailAction(id, "read");
+        await actionFor(mail)(id, "read");
       } catch {
         updateMail(id, (m) => ({ ...m, unread: true }));
       }
@@ -115,7 +146,7 @@ export default function DashboardView({ userName, userEmail }: Props) {
     const nextStarred = !mail.starred;
     updateMail(id, (m) => ({ ...m, starred: nextStarred }));
     try {
-      await updateMailAction(id, nextStarred ? "star" : "unstar");
+      await actionFor(mail)(id, nextStarred ? "star" : "unstar");
     } catch {
       updateMail(id, (m) => ({ ...m, starred: !nextStarred }));
     }
@@ -126,9 +157,11 @@ export default function DashboardView({ userName, userEmail }: Props) {
   }
 
   async function handleTrash(id: string) {
+    const mail = mails.find((m) => m.id === id);
+    if (!mail) return;
     setMails((prev) => prev.filter((m) => m.id !== id));
     try {
-      await updateMailAction(id, "trash");
+      await actionFor(mail)(id, "trash");
       refreshFolderCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to move to trash.");
@@ -136,9 +169,11 @@ export default function DashboardView({ userName, userEmail }: Props) {
   }
 
   async function handleSpam(id: string) {
+    const mail = mails.find((m) => m.id === id);
+    if (!mail) return;
     setMails((prev) => prev.filter((m) => m.id !== id));
     try {
-      await updateMailAction(id, "spam");
+      await actionFor(mail)(id, "spam");
       refreshFolderCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to report spam.");
@@ -150,9 +185,14 @@ export default function DashboardView({ userName, userEmail }: Props) {
   }
 
   async function handleReply(mail: Mail, body: string) {
+    const subject = mail.subject.toLowerCase().startsWith("re:") ? mail.subject : `Re: ${mail.subject}`;
+    if (mail.inbox === "yahoo") {
+      await sendYahooMail({ to: mail.fromEmail, subject, body, inReplyTo: mail.messageId });
+      return;
+    }
     await sendMail({
       to: mail.fromEmail,
-      subject: mail.subject.toLowerCase().startsWith("re:") ? mail.subject : `Re: ${mail.subject}`,
+      subject,
       body,
       threadId: mail.threadId,
       inReplyTo: mail.messageId,
@@ -166,8 +206,8 @@ export default function DashboardView({ userName, userEmail }: Props) {
   const filteredMails = useMemo(() => {
     let result = mails;
 
-    if (activeInbox !== "all" && activeInbox !== "gmail") {
-      result = [];
+    if (activeInbox !== "all") {
+      result = result.filter((m) => m.inbox === activeInbox);
     }
 
     if (activeFolder === "starred") {
@@ -195,9 +235,15 @@ export default function DashboardView({ userName, userEmail }: Props) {
         userEmail={userEmail}
         activeInbox={activeInbox}
         onSelectInbox={(key) => {
+          if (key === "yahoo" && !yahooConnected) {
+            setConnectYahooOpen(true);
+            setMobileSidebarOpen(false);
+            return;
+          }
           setActiveInbox(key);
           setMobileSidebarOpen(false);
         }}
+        yahooConnected={yahooConnected}
         activeFolder={activeFolder}
         onSelectFolder={(folder) => {
           setActiveFolder(folder);
@@ -324,6 +370,14 @@ export default function DashboardView({ userName, userEmail }: Props) {
         </main>
 
         <ComposeModal open={composeOpen} onClose={() => setComposeOpen(false)} onSend={handleSend} />
+        <ConnectYahooModal
+          open={connectYahooOpen}
+          onClose={() => setConnectYahooOpen(false)}
+          onConnected={() => {
+            setYahooConnected(true);
+            setActiveInbox("yahoo");
+          }}
+        />
       </div>
     </div>
   );

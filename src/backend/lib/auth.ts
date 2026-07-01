@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { genericOAuth } from "better-auth/plugins";
 import { pool } from "@/backend/lib/db";
 
 export const auth = betterAuth({
@@ -28,4 +29,18 @@ export const auth = betterAuth({
       ],
     },
   },
+  plugins: [
+    genericOAuth({
+      config: [
+        {
+          providerId: "yahoo",
+          clientId: process.env.YAHOO_CLIENT_ID as string,
+          clientSecret: process.env.YAHOO_CLIENT_SECRET as string,
+          discoveryUrl: "https://api.login.yahoo.com/.well-known/openid-configuration",
+          scopes: ["openid", "email", "profile"],
+          pkce: true,
+        },
+      ],
+    }),
+  ],
 });
